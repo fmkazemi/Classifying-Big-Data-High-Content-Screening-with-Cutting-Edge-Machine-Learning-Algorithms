@@ -15,7 +15,6 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import confusion_matrix
 from itertools import chain
 import argparse
-
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--channelasimage", help="use_channel_as_image",
                     action="store_true")
@@ -28,17 +27,16 @@ parser.add_argument("-b", "--batchsize", help="batch size", type=int,
 parser.add_argument("-l", "--layers", help="layers", type=int,
                     choices=[50, 101, 152], default=35)
 args = parser.parse_args()
-
 script_path = os.path.abspath(__file__)
 script_dir = os.path.dirname(script_path)
 #proj_root = os.path.join(script_dir)#, os.pardir, os.pardir, os.pardir)
 #proj_root = "/home/fmkazemi/code/preprocessing/" #proj_root = "/home/fmkazemi/code/preprocessing/"
 proj_root = "/gs/project/kek-072-aa/code/preprocessing/"    
 #proj_root = "/home/farhad/Desktop/Mythesis/Backup_mycodes_Guillimin/code/preprocessing/"
+
 processed_path = os.path.join(proj_root, 'input/processed/')
 features_path = os.path.join(proj_root, 'input/features/')
 base_file_name = args.filename
-
 
 info_csv = pd.read_csv(os.path.join(processed_path, '%s.csv' % base_file_name),index_col=0)
 
@@ -67,8 +65,10 @@ import numpy as np
 from sklearn.datasets import make_classification
 from sklearn.decomposition import PCA
 
+
 from imblearn.under_sampling import RandomUnderSampler
 X1 = X.reshape((2528,49152))
+
 
 rus = RandomUnderSampler(return_indices=True)
 #X_resampled, y_resampled, idx_resampled = rus.fit_sample(X, y)
@@ -90,7 +90,7 @@ strat_shuffled_split = StratifiedShuffleSplit(label_coded, n_iter=1, test_size=0
 #train_index, test_index = [s for s in strat_shuffled_split][0]
 #pdb.set_trace()
 for train_index, test_index in strat_shuffled_split:
-    print("TRAIN:", str(train_index), "TEST:", str(test_index))
+    print("TRAIN:" + str(train_index), "TEST:" + str(test_index))
     #X_train, X_test = np.array(images[train_index,:,:,:]), np.array(images[test_index,:,:,:])
     X_train, X_test = images[train_index,:,:,:], images[test_index,:,:,:]
     y_train, y_test = label_coded[train_index], label_coded[test_index]
@@ -122,14 +122,14 @@ print( "Number of items in y_test:",collections.Counter(y_test))
 
 #===============================================================================================================
 #pdb.set_trace()
-##############################      Deep Learning
+##############################      Deep Learning VGG19
 #Load necessary libraries
 import tensorflow as tf
 #import numpy as np
 import tensorflow.contrib.slim as slim
 #**import input_data
 #matplotlib inline
-
+print("VGG19_128-------------------VGG19_128------------------VGG19_128-------------------------VGG19_128")
 
 total_layers = 35 #40#25 #Specify how deep we want our network
 units_between_stride = total_layers /7#8
@@ -156,6 +156,18 @@ output = slim.layers.softmax(slim.layers.flatten(top))
 loss = tf.reduce_mean(-tf.reduce_sum(label_oh * tf.log(output) + 1e-10, reduction_indices=[1]))
 trainer = tf.train.AdamOptimizer(learning_rate=0.001)
 update = trainer.minimize(loss)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
                    #----------------Visualize the network graph
@@ -214,6 +226,7 @@ nn_acc = []
 tnow = []
 telaps = []
 ii = 0
+
 with tf.Session() as sess:
     sess.run(init)
     i = 0
@@ -237,13 +250,14 @@ with tf.Session() as sess:
 #cifar_inp= X_train
 #cifar_tar= y_train 
             batch_index = np.random.choice(draw,size=batch_size,replace=False)
-###        x = cifar['data'][batch_index]
+###        x = cif['data'][batch_index]
         x = X_train[:][batch_index]
 ###        x = np.reshape(x,[batch_size,32,32,3],order='F')
+
+        x = x/np.float32(255.0)
+        x = (x - np.mean(x,axis=0)) / np.std(x,axis=0)
         
         x = np.reshape(x,[batch_size,128,128,3],order='F')
-        x = (x/256.0)
-        x = (x - np.mean(x,axis=0)) / np.std(x,axis=0)
 ###        y = np.reshape(np.array(cifar['labels'])[batch_index],[batch_size,1])
         y = np.reshape(np.array(y_train[:])[batch_index],[batch_size,1])
 ###        pdb.set_trace()
@@ -251,20 +265,23 @@ with tf.Session() as sess:
         accuracy = np.sum(np.equal(np.hstack(y),np.argmax(yP,1)))/float(len(y))# Evaluate the Model: First we'll figure out where we predicted the correct label. np.hstack(y) is an extremely useful function which gives you the index of the highest entry in a tensor along some axis. For example, np.hstack(y) is the label our model thinks is most likely for each input, while tf.argmax(y_,1) is the true label. We can use tf.equal to check if our prediction matches the truth.
         l.append(lossA)
         a.append(accuracy)
-        if i % 10 == 0: print("Step: " + str(i) + " Loss: " + str(lossA) + " Accuracy: " + str(accuracy))
+        if i % 10 == 0:
+            print("***************************** step % 10 ==0 **************************************************")
+            print("Step: " + str(i) + " Loss: " + str(lossA) + " Accuracy: " + str(accuracy))
         if i % 100 == 0:
 ###            point = np.random.randint(0,10000-500)
             #point = np.random.randint(0,578-34)
-            print("*******************************************************************************")
+            print("***************************** step % 100 ==0**************************************************")
             print ("Step: " + str(i))
             t1 = time.process_time()
             point = np.random.randint(0,72-38)
 ###            xT = cifarT['data'][point:point+500]
             xT = X_test[:][point:point+38]
 #            xT = np.reshape(xT,[500,32,32,3],order='F')
-            xT = np.reshape(xT,[38,128,128,3],order='F')
-            xT = (xT/256.0)
+            xT = xT/np.float32(255.0)
             xT = (xT - np.mean(xT,axis=0)) / np.std(xT,axis=0)
+
+            xT = np.reshape(xT,[38,128,128,3],order='F')
 ###            yT = np.reshape(np.array(cifarT['labels'])[point:point+500],[500])
             yT = np.reshape(np.array(y_test[:])[point:point+38],[38])
             print("Existing MOAs in batch testing data set:" + str(yT))
@@ -320,6 +337,7 @@ with tf.Session() as sess:
             #plt.figure() 
             #epoch = np.arange(0, ii*100, ii+1)#***************************************************************
             epoch = np.linspace(0,ii*100,ii+1)
+
             #pdb.set_trace()
             l2 = plt.plot(epoch,aT, linewidth=4, color= 'r', marker='o', label='test accuracy') #Plot test accuracy
 #            plt.savefig('/home/fmkazemi/code/result/test_accuracy' + str(i) + '.png')   # save the figure to file
