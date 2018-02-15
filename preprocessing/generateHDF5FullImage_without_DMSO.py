@@ -107,7 +107,7 @@ for row in zip(combined['Image_FileName_DAPI'],
     img[:, :, 0] = c11
     img[:, :, 1] = c22
     img[:, :, 2] = c33
-    pdb.set_trace()  
+#    pdb.set_trace()  
     
     images[curFile, :] = img
 
