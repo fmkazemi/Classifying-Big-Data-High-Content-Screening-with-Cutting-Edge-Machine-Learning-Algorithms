@@ -158,7 +158,7 @@ label_oh = slim.layers.one_hot_encoding(label_layer,12)# 12
 ##trainer = tf.train.AdamOptimizer(learning_rate=0.001)
 ##update = trainer.minimize(loss)
 #===========================
-
+fc_conv_padding='VALID'
 with slim.arg_scope([slim.conv2d, slim.fully_connected],
                      activation_fn=tf.nn.relu,
                      weights_initializer=tf.truncated_normal_initializer(0.0, 0.01),
