@@ -178,7 +178,7 @@ with slim.arg_scope([slim.conv2d, slim.fully_connected],
     net = slim.fully_connected(net, 4096, scope='fc7')
     net = slim.dropout(net, 0.5, scope='dropout7')
     output = slim.fully_connected(slim.layers.flatten(net), 12, activation_fn=None, scope='fc8') 
-pdb.set_trace()
+#pdb.set_trace()
 #loss = tf.reduce_mean(-tf.reduce_sum(label_oh * tf.log(output) + 1e-10, reduction_indices=[1]))
 #sum_of_squares_loss = slim.losses.sum_of_squares(outp	ut, label_oh)
 #loss = slim.losses.softmax_cross_entropy(output, label_oh)
