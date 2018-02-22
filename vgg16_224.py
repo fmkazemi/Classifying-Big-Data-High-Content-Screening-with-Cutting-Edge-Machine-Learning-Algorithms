@@ -23,7 +23,7 @@ parser.add_argument("-f", "--filename", help="base file name",
                     default="full_images224")
 
 parser.add_argument("-b", "--batchsize", help="batch size", type=int,
-                    default=128)
+                    default=34)
 #parser.add_argument("-l", "--layers", help="layers", type=int,
 #                    choices=[50, 101, 152], default=35)
 args = parser.parse_args()
@@ -55,8 +55,8 @@ le = preprocessing.LabelEncoder()
 le.fit(info_csv['moa'])
 print("Name of Clasees:")
 print(le.classes_)
-y = le.transform(info_csv['moa'])
-print("Labels of Classes( between 0 and 11 )",str(y))
+y0 = le.transform(info_csv['moa'])
+print("Labels of Classes( between 0 and 11 )",str(y0))
 ###pdb.set_trace()
 ##############################                       Balancing data
 # Apply the random under-sampling
@@ -74,8 +74,9 @@ rus = RandomUnderSampler(return_indices=True, random_state=42) #Under-sample the
 #pdb.set_trace()  
 
 
-images0, label_coded, idx_resampled = rus.fit_sample(X1, y)
+images0, label_coded, idx_resampled = rus.fit_sample(X1, y0)
 images = X[idx_resampled]
+# = y0[idx_resampled]
 ##########################################print("Index of resampled data (balanced data)" + str(idx_resampled))
 
 ###################X_train, X_test, y_train, y_test = train_test_split(np.array(images[0:2528]), label_coded, test_size=0.15, random_state=42)
@@ -162,29 +163,30 @@ with slim.arg_scope([slim.conv2d, slim.fully_connected],
                      activation_fn=tf.nn.relu,
                      weights_initializer=tf.truncated_normal_initializer(0.0, 0.01),
                      weights_regularizer=slim.l2_regularizer(0.0005)):
-net = slim.repeat(input_layer, 2, slim.conv2d, 64, [3, 3], scope='conv1')
-net = slim.max_pool2d(net, [2, 2], scope='pool1')
-net = slim.repeat(net, 2, slim.conv2d, 128, [3, 3], scope='conv2')
-net = slim.max_pool2d(net, [2, 2], scope='pool2')
-net = slim.repeat(net, 3, slim.conv2d, 256, [3, 3], scope='conv3')
-net = slim.max_pool2d(net, [2, 2], scope='pool3')
-net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv4')
-net = slim.max_pool2d(net, [2, 2], scope='pool4')
-net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv5')
-net = slim.max_pool2d(net, [2, 2], scope='pool5')
-net = slim.fully_connected(net, 4096, scope='fc6')
-net = slim.dropout(net, 0.5, scope='dropout6')
-net = slim.fully_connected(net, 4096, scope='fc7')
-net = slim.dropout(net, 0.5, scope='dropout7')
-output = slim.fully_connected(net, 12, activation_fn=None, scope='fc8')
-#pdb.set_trace()
+    net = slim.repeat(input_layer, 2, slim.conv2d, 64, [3, 3], scope='conv1')
+    net = slim.max_pool2d(net, [2, 2], scope='pool1')
+    net = slim.repeat(net, 2, slim.conv2d, 128, [3, 3], scope='conv2')
+    net = slim.max_pool2d(net, [2, 2], scope='pool2')
+    net = slim.repeat(net, 3, slim.conv2d, 256, [3, 3], scope='conv3')
+    net = slim.max_pool2d(net, [2, 2], scope='pool3')
+    net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv4')
+    net = slim.max_pool2d(net, [2, 2], scope='pool4')
+    net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv5')
+    net = slim.max_pool2d(net, [2, 2], scope='pool5')
+    net = slim.fully_connected(net, 4096, scope='fc6')
+    net = slim.dropout(net, 0.5, scope='dropout6')
+    net = slim.fully_connected(net, 4096, scope='fc7')
+    net = slim.dropout(net, 0.5, scope='dropout7')
+    output = slim.fully_connected(slim.layers.flatten(net), 12, activation_fn=None, scope='fc8') 
+pdb.set_trace()
 #loss = tf.reduce_mean(-tf.reduce_sum(label_oh * tf.log(output) + 1e-10, reduction_indices=[1]))
-#sum_of_squares_loss = slim.losses.sum_of_squares(output, label_oh)
-loss = slim.losses.softmax_cross_entropy(output, label_oh)
+#sum_of_squares_loss = slim.losses.sum_of_squares(outp	ut, label_oh)
+#loss = slim.losses.softmax_cross_entropy(output, label_oh)
+loss = tf.losses.softmax_cross_entropy(label_oh, output)
 #trainer = tf.train.GradientDescentOptimizer(learning_rate)
 trainer = tf.train.AdamOptimizer(learning_rate=0.001)
 update = trainer.minimize(loss)
-
+ 
                    #----------------Visualize the network graph
 
 ##from IPython.display import clear_output, Image, display, HTML
