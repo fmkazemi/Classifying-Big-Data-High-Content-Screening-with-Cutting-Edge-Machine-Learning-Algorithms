@@ -296,18 +296,18 @@ with tf.Session() as sess:
 ###            point = np.random.randint(0,10000-500)
             #point = np.random.randint(0,578-34)
             print("***************************** step % 100 ==0**************************************************")
-            print ("Step: " + str(i))
+            print ("Step: " + str(i)+ " Loss: " + str(lossA) + " Accuracy: " + str(accuracy))
             t1 = time.process_time()
-            point = np.random.randint(0,72-38)
+            point = np.random.randint(0,72-34)
 ###            xT = cifarT['data'][point:point+500]
-            xT = X_test[:][point:point+38]
+            xT = X_test[:][point:point+34]
 #            xT = np.reshape(xT,[500,32,32,3],order='F')
             xT = xT/np.float32(255.0)
             xT = (xT - np.mean(xT,axis=0)) / np.std(xT,axis=0)
 
-            xT = np.reshape(xT,[38,224,224,3],order='F')
+            xT = np.reshape(xT,[34,224,224,3],order='F')
 ###            yT = np.reshape(np.array(cifarT['labels'])[point:point+500],[500])
-            yT = np.reshape(np.array(y_test[:])[point:point+38],[38])
+            yT = np.reshape(np.array(y_test[:])[point:point+34],[34])
             print("Existing MOAs in batch testing data set:" + str(yT))
             print( "Number of MOAs in batch testing data set:",collections.Counter(yT))
             lossT,yP = sess.run([loss,output],feed_dict={input_layer:xT,label_layer:yT})
@@ -332,7 +332,7 @@ with tf.Session() as sess:
             plt.savefig('/home/fmkazemi/code/result/time_vgg19_224' + str(i) + '.png') 
             print("Length Running time for test dataset", len(telaps))
             print("Running time for test dataset:" + str(telaps))
-            print("Running time for each sample in test dataset:"+ str(elapsed_time/38))
+            print("Running time for each sample in test dataset:"+ str(elapsed_time/34))
 
             print("Length lost",len(l))
             print("Entropy loss:"+str(l))
