@@ -277,14 +277,15 @@ with tf.Session() as sess:
 ###        x = cif['data'][batch_index]
         x = X_train[:][batch_index]
 ###        x = np.reshape(x,[batch_size,32,32,3],order='F')
-
+#        pdb.set_trace()
+ 
 #@        x = x/np.float32(255.0)
-        x = (x - np.mean(x,axis=0)) / np.std(x,axis=0)
-        
+#@        x = (x - np.mean(x,axis=0)) / np.std(x,axis=0)
+#@        x = (x - np.mean(x,axis=3))        
         x = np.reshape(x,[batch_size,224,224,3],order='F')
 ###        y = np.reshape(np.array(cifar['labels'])[batch_index],[batch_size,1])
         y = np.reshape(np.array(y_train[:])[batch_index],[batch_size,1])
-###        pdb.set_trace()
+        pdb.set_trace()
         _,lossA,yP,LO = sess.run([update,loss,output,label_oh],feed_dict={input_layer:x,label_layer:np.hstack(y)})#We then run the train_step(update) operation, using feed_dict to replace the placeholder tensors x and y_ with the training examples. 
         accuracy = np.sum(np.equal(np.hstack(y),np.argmax(yP,1)))/float(len(y))# Evaluate the Model: First we'll figure out where we predicted the correct label. np.hstack(y) is an extremely useful function which gives you the index of the highest entry in a tensor along some axis. For example, tf.argmax(y_,1) is the label our model thinks is most likely for each input, while np.hstack(y) is the true label. We can use tf.equal to check if our prediction matches the truth.
         l.append(lossA)
@@ -303,13 +304,14 @@ with tf.Session() as sess:
             xT = X_test[:][point:point+34]
 #            xT = np.reshape(xT,[500,32,32,3],order='F')
 #@            xT = xT/np.float32(255.0)
-            xT = (xT - np.mean(xT,axis=0)) / np.std(xT,axis=0)
-
+#            xT = (xT - np.mean(xT,axis=0)) / np.std(xT,axis=0)
+#@            xT = (xT - np.mean(xT,axis=3))
             xT = np.reshape(xT,[34,224,224,3],order='F')
 ###            yT = np.reshape(np.array(cifarT['labels'])[point:point+500],[500])
             yT = np.reshape(np.array(y_test[:])[point:point+34],[34])
             print("Existing MOAs in batch testing data set:" + str(yT))
             print( "Number of MOAs in batch testing data set:",collections.Counter(yT))
+
             lossT,yP = sess.run([loss,output],feed_dict={input_layer:xT,label_layer:yT})
             accuracy = np.sum(np.equal(yT,np.argmax(yP,1)))/float(len(yT)) #We then invert the encoding by using the NumPy argmax() function on the first value in the sequence that returns the expected value 1 for the first integer.
             t = time.process_time()

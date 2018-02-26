@@ -281,8 +281,8 @@ with tf.Session() as sess:
 ###        x = np.reshape(x,[batch_size,32,32,3],order='F')
 
 #@        x = x/np.float32(255.0)
-        x = (x - np.mean(x,axis=0)) / np.std(x,axis=0)
-        
+#@        x = (x - np.mean(x,axis=0)) / np.std(x,axis=0)
+#@        x = (x - np.mean(x,axis=3))        
         x = np.reshape(x,[batch_size,224,224,3],order='F')
 ###        y = np.reshape(np.array(cifar['labels'])[batch_index],[batch_size,1])
         y = np.reshape(np.array(y_train[:])[batch_index],[batch_size,1])
@@ -305,8 +305,8 @@ with tf.Session() as sess:
             xT = X_test[:][point:point+34]
 #            xT = np.reshape(xT,[500,32,32,3],order='F')
 #@            xT = xT/np.float32(255.0)
-            xT = (xT - np.mean(xT,axis=0)) / np.std(xT,axis=0)
-
+#@            xT = (xT - np.mean(xT,axis=0)) / np.std(xT,axis=0)
+#@            xT = (xT - np.mean(xT,axis=3))
             xT = np.reshape(xT,[34,224,224,3],order='F')
 ###            yT = np.reshape(np.array(cifarT['labels'])[point:point+500],[500])
             yT = np.reshape(np.array(y_test[:])[point:point+34],[34])
