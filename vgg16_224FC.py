@@ -278,7 +278,7 @@ with tf.Session() as sess:
         x = X_train[:][batch_index]
 ###        x = np.reshape(x,[batch_size,32,32,3],order='F')
 
-        x = x/np.float32(255.0)
+#@        x = x/np.float32(255.0)
         x = (x - np.mean(x,axis=0)) / np.std(x,axis=0)
         
         x = np.reshape(x,[batch_size,224,224,3],order='F')
@@ -302,7 +302,7 @@ with tf.Session() as sess:
 ###            xT = cifarT['data'][point:point+500]
             xT = X_test[:][point:point+34]
 #            xT = np.reshape(xT,[500,32,32,3],order='F')
-            xT = xT/np.float32(255.0)
+#@            xT = xT/np.float32(255.0)
             xT = (xT - np.mean(xT,axis=0)) / np.std(xT,axis=0)
 
             xT = np.reshape(xT,[34,224,224,3],order='F')
