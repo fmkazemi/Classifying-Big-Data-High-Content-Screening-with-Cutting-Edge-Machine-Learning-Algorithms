@@ -285,7 +285,7 @@ with tf.Session() as sess:
         x = np.reshape(x,[batch_size,224,224,3],order='F')
 ###        y = np.reshape(np.array(cifar['labels'])[batch_index],[batch_size,1])
         y = np.reshape(np.array(y_train[:])[batch_index],[batch_size,1])
-        pdb.set_trace()
+#        pdb.set_trace()
         _,lossA,yP,LO = sess.run([update,loss,output,label_oh],feed_dict={input_layer:x,label_layer:np.hstack(y)})#We then run the train_step(update) operation, using feed_dict to replace the placeholder tensors x and y_ with the training examples. 
         accuracy = np.sum(np.equal(np.hstack(y),np.argmax(yP,1)))/float(len(y))# Evaluate the Model: First we'll figure out where we predicted the correct label. np.hstack(y) is an extremely useful function which gives you the index of the highest entry in a tensor along some axis. For example, tf.argmax(y_,1) is the label our model thinks is most likely for each input, while np.hstack(y) is the true label. We can use tf.equal to check if our prediction matches the truth.
         l.append(lossA)
