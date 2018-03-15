@@ -68,8 +68,9 @@ for row in zip(combined['Image_FileName_DAPI'],
     img[:, :, 0] = c1
     img[:, :, 1] = c2
     img[:, :, 2] = c3
-
-#
+    #print("img shape:", img.shape, "img:", img[:,:,2])
+    #pdb.set_trace()
+    img = (img / (2**8)).astype('uint8')
     images[curFile, :] = img
 
     curFile += 1

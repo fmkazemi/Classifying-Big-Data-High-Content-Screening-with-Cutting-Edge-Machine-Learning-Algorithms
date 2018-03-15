@@ -19,11 +19,13 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--channelasimage", help="use_channel_as_image",
                     action="store_true")
 
+#@parser.add_argument("-f", "--filename", help="base file name",
+#@                    default="full_images224")
 parser.add_argument("-f", "--filename", help="base file name",
-                    default="full_images224")
+                    default="rand_sampled_size224_num35")
 
 parser.add_argument("-b", "--batchsize", help="batch size", type=int,
-                    default=34)
+                    default=60)#34)
 #parser.add_argument("-l", "--layers", help="layers", type=int,
 #                    choices=[50, 101, 152], default=35)
 args = parser.parse_args()
@@ -41,11 +43,12 @@ base_file_name = args.filename
 info_csv = pd.read_csv(os.path.join(processed_path, '%s.csv' % base_file_name),index_col=0)
 
 X = np.array(h5py.File(os.path.join(processed_path, "%s.hdf5" % base_file_name),"r")['images'])
-#pdb.set_trace()
+print( "X:",X.shape,"X:",X )#pdb.set_trace()
 use_channel_as_image = True if args.channelasimage else False
 channel_app = "_channelasimg" if use_channel_as_image else ""
 batch_size = args.batchsize
 #layers = args.layers
+print("Dimension of raw data:", X.shape)
 
 #================================== Provide train validate and test data
 from sklearn.cross_validation import train_test_split
@@ -67,8 +70,8 @@ from sklearn.decomposition import PCA
 
 
 from imblearn.under_sampling import RandomUnderSampler
-X1 = X.reshape((2528,150528))
-
+#@X1 = X.reshape((2528,150528))
+X1 = X.reshape((88480,150528))
 
 rus = RandomUnderSampler(return_indices=True, random_state=42) #Under-sample the majority class(es) by randomly picking samples with or without replacement. X_resampled, y_resampled, idx_resampled = rus.fit_sample(X, y) Simple undersampling will drop some of the samples at random to give a balanced dataset 
 #pdb.set_trace()  
@@ -76,6 +79,9 @@ rus = RandomUnderSampler(return_indices=True, random_state=42) #Under-sample the
 
 images0, label_coded, idx_resampled = rus.fit_sample(X1, y0)
 images = X[idx_resampled]
+print( "dimension of balanced dataset:",images0.shape,"images0:",images0,"dimension of lebel_coded:", label_coded.shape,"label_coded:",label_coded )
+print( "check dimension of balanced dataset (images):",images.shape,"images:",images )
+
 # = y0[idx_resampled]
 ##########################################print("Index of resampled data (balanced data)" + str(idx_resampled))
 
@@ -161,40 +167,42 @@ label_oh = slim.layers.one_hot_encoding(label_layer,12)# 12
 fc_conv_padding='VALID'
 with slim.arg_scope([slim.conv2d, slim.fully_connected],
                      activation_fn=tf.nn.relu,
+                     biases_initializer=tf.zeros_initializer(),
                      weights_initializer=tf.truncated_normal_initializer(0.0, 0.01),
-                     weights_regularizer=slim.l2_regularizer(0.0005)):
-    net = slim.repeat(input_layer, 2, slim.conv2d, 64, [3, 3], scope='conv1')
-    net = slim.max_pool2d(net, [2, 2], scope='pool1')
-    net = slim.repeat(net, 2, slim.conv2d, 128, [3, 3], scope='conv2')
-    net = slim.max_pool2d(net, [2, 2], scope='pool2')
-    net = slim.repeat(net, 4, slim.conv2d, 256, [3, 3], scope='conv3')
-    net = slim.max_pool2d(net, [2, 2], scope='pool3')
-    net = slim.repeat(net, 4, slim.conv2d, 512, [3, 3], scope='conv4')
-    net = slim.max_pool2d(net, [2, 2], scope='pool4')
-    net = slim.repeat(net, 4, slim.conv2d, 512, [3, 3], scope='conv5')
-    net = slim.max_pool2d(net, [2, 2], scope='pool5')
-    net = slim.fully_connected(slim.layers.flatten(net), 4096, scope='fc6')
+                     weights_regularizer=slim.l2_regularizer(0.0005)):# weight decay
+    with slim.arg_scope([slim.conv2d], padding='SAME'): # as arg_sc:
+         net = slim.repeat(input_layer, 2, slim.conv2d, 64, [3, 3], scope='conv1')
+         net = slim.max_pool2d(net, [2, 2], scope='pool1')
+         net = slim.repeat(net, 2, slim.conv2d, 128, [3, 3], scope='conv2')
+         net = slim.max_pool2d(net, [2, 2], scope='pool2')
+         net = slim.repeat(net, 4, slim.conv2d, 256, [3, 3], scope='conv3')
+         net = slim.max_pool2d(net, [2, 2], scope='pool3')
+         net = slim.repeat(net, 4, slim.conv2d, 512, [3, 3], scope='conv4')
+         net = slim.max_pool2d(net, [2, 2], scope='pool4')
+         net = slim.repeat(net, 4, slim.conv2d, 512, [3, 3], scope='conv5')
+         net = slim.max_pool2d(net, [2, 2], scope='pool5')
+         net = slim.fully_connected(slim.layers.flatten(net), 4096, scope='fc6')
 #@    net = slim.conv2d(net, 4096, [7, 7], padding=fc_conv_padding, scope='fc6')
-    net = slim.dropout(net, 0.5, is_training=True, scope='dropout6')
+         net = slim.dropout(net, 0.5, is_training=True, scope='dropout6')
 #    net = slim.dropout(net, 0.5, scope='dropout6')
-    net = slim.fully_connected(net, 4096, scope='fc7')
+         net = slim.fully_connected(net, 4096, scope='fc7')
 #@    net = slim.conv2d(net, 4096, [1, 1], scope='fc7')
 #    net = slim.dropout(net, 0.5, scope='dropout7')
-    net = slim.dropout(net, 0.5, is_training=True, scope='dropout7')
+         net = slim.dropout(net, 0.5, is_training=True, scope='dropout7')
 #    output = slim.conv2d(slim.layers.flatten(net), 12 , [1, 1], activation_fn=None, normalizer_fn=None, scope='fc8')
 #@    net = slim.conv2d(net, 12 , [1, 1], activation_fn=None, normalizer_fn=None, scope='fc8')
-    net = slim.fully_connected(net, 12, activation_fn=None, scope='fc8') 
+         net = slim.fully_connected(net, 12, activation_fn=None, scope='fc8') 
 #@    output = slim.layers.softmax(slim.layers.flatten(net))
-    output = slim.layers.softmax(net)
-    loss = tf.reduce_mean(-tf.reduce_sum(label_oh * tf.log(output) + 1e-10, reduction_indices=[1]))
+output = slim.layers.softmax(net)
+loss = tf.reduce_mean(-tf.reduce_sum(label_oh * tf.log(output) + 1e-10, reduction_indices=[1]))
 #cross_entropy = tf.reduce_mean(-tf.reduce_sum(label * tf.log(prediction), reduction_indices=[1]))
 #sum_of_squares_loss = slim.losses.sum_of_squares(outp	ut, label_oh)
 #@loss = slim.losses.softmax_cross_entropy(output, label_oh)
 #@loss = tf.losses.softmax_cross_entropy(label_oh, output)
 #loss = slim.losses.log_loss(output, label_oh, weights=1.0, epsilon=1e-7, scope=None):
-    trainer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
+trainer = tf.train.GradientDescentOptimizer(learning_rate=0.1)
 #@    trainer = tf.train.AdamOptimizer(learning_rate=0.001)
-    update = trainer.minimize(loss)
+update = trainer.minimize(loss)
  
                    #----------------Visualize the network graph
 
@@ -204,19 +212,19 @@ def strip_consts(graph_def, max_const_size=32):
     """Strip large constant values from graph_def."""
     strip_def = tf.GraphDef()
     for n0 in graph_def.node:
-        n = strip_def.node.add() 
-        n.MergeFrom(n0)
-        if n.op == 'Const':
-            tensor = n.attr['value'].tensor
-            size = len(tensor.tensor_content)
-            if size > max_const_size:
-                tensor.tensor_content = "<stripped %d bytes>"%size
+         n = strip_def.node.add() 
+         n.MergeFrom(n0)
+         if n.op == 'Const':
+              tensor = n.attr['value'].tensor
+              size = len(tensor.tensor_content)
+              if size > max_const_size:
+                   tensor.tensor_content = "<stripped %d bytes>"%size
     return strip_def
 
 def show_graph(graph_def, max_const_size=32):
     """Visualize TensorFlow graph."""
     if hasattr(graph_def, 'as_graph_def'):
-        graph_def = graph_def.as_graph_def()
+         graph_def = graph_def.as_graph_def()
     strip_def = strip_consts(graph_def, max_const_size=max_const_size)
     code = """
         <script>
@@ -243,7 +251,7 @@ def show_graph(graph_def, max_const_size=32):
 init = tf.initialize_all_variables()
 #batch_size = 12 #17 #16#32#64 #8 # 64
 currentCifar = 1
-total_steps = 50001
+total_steps = 50001#5001
 l = []
 a = []
 aT = []
@@ -257,15 +265,15 @@ with tf.Session() as sess:
     sess.run(init)
     i = 0
 ###    draw = range(10000) #We load 10000 training examples in each training iteration.
-    draw = range(408)#3270) #We load 10000 training examples in each training iteration.
+    draw = range(14280)#range(408)#3270) #We load 10000 training examples in each training iteration.
 #    pdb.set_trace()
     while i < total_steps:
 ###        if i % (10000/batch_size) != 0:
-        if i % (408/batch_size) != 0:
-            batch_index = np.random.choice(draw,size=batch_size,replace=False)
-        else:
+#@        if i % (10200/batch_size) != 0:     #   if i % (408/batch_size) != 0:
+         batch_index = np.random.choice(draw,size=batch_size,replace=False)
+#@        else:
 ###            draw = range(10000)
-            draw = range(408)
+#@            draw = range(10200)           # draw = range(408)
 ###            if currentCifar == 5:
 ###                currentCifar = 1
 ###                print("Switched CIFAR set to " + str(currentCifar))
@@ -275,130 +283,148 @@ with tf.Session() as sess:
 ###            cifar = unpickle('./cifar10/data_batch_'+str(currentCifar))
 #cifar_inp= X_train
 #cifar_tar= y_train 
-            batch_index = np.random.choice(draw,size=batch_size,replace=False)
+#@            batch_index = np.random.choice(draw,size=batch_size,replace=False)
 ###        x = cif['data'][batch_index]
-        x = X_train[:][batch_index]
-###        x = np.reshape(x,[batch_size,32,32,3],order='F')
-
+         x = X_train[:][batch_index]
+         print("X_train:", X_train.shape, "X_train:",X_train )###        x = np.reshape(x,[batch_size,32,32,3],order='F')
+         print("x :", x.shape, "x:",x )
+#@         x = np.reshape(x,[batch_size,224,224,3],order='F')
+         print("y_train:", y_train.shape, "y_train:",y_train )###        x = np.reshape(x,[batch_size,32,32,3],order='F')#@         print("x after reshape:", x.shape, "x:",x )
+         me = np.mean(x,axis=0 )
+         print("me shape:",me.shape)
+         print("mean", np.mean(x,axis=0 ) )
+         print("std", np.std(x,axis=0 ))
+         x = (x - np.mean(x,axis=0)) / np.std(x,axis=0)
+         print("x after mean subtraction/std",x.shape,"  ",x[45,:,:,2] )
 #@        x = x/np.float32(255.0)
-#@        x = (x - np.mean(x,axis=0)) / np.std(x,axis=0)
+#@        print("x after /255", x.shape,"  ",x[45,:,:,2] )
 #@        x = (x - np.mean(x,axis=3))        
-        x = np.reshape(x,[batch_size,224,224,3],order='F')
+#@        x = np.reshape(x,[batch_size,224,224,3],order='F')
 ###        y = np.reshape(np.array(cifar['labels'])[batch_index],[batch_size,1])
-        y = np.reshape(np.array(y_train[:])[batch_index],[batch_size,1])
-###        pdb.set_trace()
-        _,lossA,yP,LO = sess.run([update,loss,output,label_oh],feed_dict={input_layer:x,label_layer:np.hstack(y)})#We then run the train_step(update) operation, using feed_dict to replace the placeholder tensors x and y_ with the training examples. 
-        accuracy = np.sum(np.equal(np.hstack(y),np.argmax(yP,1)))/float(len(y))# Evaluate the Model: First we'll figure out where we predicted the correct label. np.hstack(y) is an extremely useful function which gives you the index of the highest entry in a tensor along some axis. For example, tf.argmax(y_,1) is the label our model thinks is most likely for each input, while np.hstack(y) is the true label. We can use tf.equal to check if our prediction matches the truth.
-        l.append(lossA)
-        a.append(accuracy)
-        if i % 10 == 0:
-            print("***************************** step % 10 ==0 **************************************************")
-            print("Step: " + str(i) + " Loss: " + str(lossA) + " Accuracy: " + str(accuracy))
-        if i % 100 == 0:
+         y = np.reshape(np.array(y_train[:])[batch_index],[batch_size,1])
+         print("y:", y.shape, "y:",y)###        x = np.reshape(x,[batch_size,32,32,3],order='F')#@         prin###        pdb.set_trace()
+         _,lossA,yP,LO = sess.run([update,loss,output,label_oh],feed_dict={input_layer:x,label_layer:np.hstack(y)})#We then run the train_step(update) operation, using feed_dict to replace the placeholder tensors x and y_ with the training examples. 
+         accuracy = np.sum(np.equal(np.hstack(y),np.argmax(yP,1)))/float(len(y))# Evaluate the Model: First we'll figure out where we predicted the correct label. np.hstack(y) is an extremely useful function which gives you the index of the highest entry in a tensor along some axis. For example, tf.argmax(y_,1) is the label our model thinks is most likely for each input, while np.hstack(y) is the true label. We can use tf.equal to check if our prediction matches the truth.
+         print("output:",output,"output shape",output.shape,"label_oh",label_oh,"label_oh shape",label_oh.shape)
+         l.append(lossA)
+         a.append(accuracy)
+         if i % 10 == 0:
+              print("***************************** step % 10 ==0 **************************************************")
+              print("Step: " + str(i) + " Loss: " + str(lossA) + " Accuracy: " + str(accuracy))
+         if i % 100 == 0:
 ###            point = np.random.randint(0,10000-500)
             #point = np.random.randint(0,578-34)
-            print("***************************** step % 100 ==0**************************************************")
-            print ("Step: " + str(i)+ " Loss: " + str(lossA) + " Accuracy: " + str(accuracy))
-            t1 = time.process_time()
-            point = np.random.randint(0,72-34)
+              print("***************************** step % 100 ==0**************************************************")
+              print ("Step: " + str(i)+ " Loss: " + str(lossA) + " Accuracy: " + str(accuracy))
+              t1 = time.process_time()
+              point = np.random.randint(0,2520-batch_size)           # point = np.random.randint(0,72-34)
 ###            xT = cifarT['data'][point:point+500]
-            xT = X_test[:][point:point+34]
+              xT = X_test[:][point:point+batch_size]#34]
+#@              print("XT before reshape:", xT.shape, "xT:",xT )
 #            xT = np.reshape(xT,[500,32,32,3],order='F')
 #@            xT = xT/np.float32(255.0)
 #@            xT = (xT - np.mean(xT,axis=0)) / np.std(xT,axis=0)
 #@            xT = (xT - np.mean(xT,axis=3))
-            xT = np.reshape(xT,[34,224,224,3],order='F')
-###            yT = np.reshape(np.array(cifarT['labels'])[point:point+500],[500])
-            yT = np.reshape(np.array(y_test[:])[point:point+34],[34])
-            print("Existing MOAs in batch testing data set:" + str(yT))
-            print( "Number of MOAs in batch testing data set:",collections.Counter(yT))
-            lossT,yP = sess.run([loss,output],feed_dict={input_layer:xT,label_layer:yT})
-            accuracy = np.sum(np.equal(yT,np.argmax(yP,1)))/float(len(yT)) #We then invert the encoding by using the NumPy argmax() function on the first value in the sequence that returns the expected value 1 for the first integer.
-            t = time.process_time()
-            tnow.append(t)
-            aT.append(accuracy)
-            print ("Test set accuracy: " + str(accuracy))
-            elapsed_time = time.process_time() - t1
-            telaps.append(elapsed_time)      #elapse time for testing 38 sample 
+#@              xT = np.reshape(xT,[batch_size,224,224,3],order='F') #            xT = np.reshape(xT,[34,224,224,3],order='F')
+#@              print("XT after reshape:", xT.shape, "xT:",xT )
+              print("mean for test data", np.mean(xT,axis=0 ) )
+              print("std for test data", np.std(xT,axis=0) )
+              xT = (xT - np.mean(xT,axis=0)) / np.std(xT,axis=0)
+              print("xT after mean subtraction/std",xT.shape,"  ",xT[45,:,:,2] )
+#@            xT = xT/np.float32(255.0)
+#@            print("x after /255", xT.shape,"  ",xT[45,:,:,2] )
+#@            xT = np.reshape(xT,[batch_size,224,224,3],order='F') #            xT = np.reshape(xT,[34,224,224,3],order='F')
+		###            yT = np.reshape(np.array(cifarT['labels'])[point:point+500],[500])
+              yT = np.reshape(np.array(y_test[:])[point:point+batch_size],[batch_size]) #        yT = np.reshape(np.array(y_test[:])[point:point+34],[34])
+              print("Existing MOAs in batch testing data set:" + str(yT))
+              print( "Number of MOAs in batch testing data set:",collections.Counter(yT))
+              lossT,yP = sess.run([loss,output],feed_dict={input_layer:xT,label_layer:yT})
+              accuracy = np.sum(np.equal(yT,np.argmax(yP,1)))/float(len(yT)) #We then invert the encoding by using the NumPy argmax() function on the first value in the sequence that returns the expected value 1 for the first integer.
+              t = time.process_time()
+              tnow.append(t)
+              aT.append(accuracy)
+              print ("Test set accuracy: " + str(accuracy))
+              elapsed_time = time.process_time() - t1
+              telaps.append(elapsed_time)      #elapse time for testing 38 sample 
 #        if i % 200 == 0:
 
-            print("Length tnow on test dataset", len(tnow))
-            print("Time now:" + str(tnow))
-            plt.figure(figsize=(16,8))
-            plt.plot(tnow,aT,'r') #Plot training loss
+              print("Length tnow on test dataset", len(tnow))
+              print("Time now:" + str(tnow))
+              plt.figure(figsize=(16,8))
+              plt.plot(tnow,aT,'r') #Plot training loss
             #plt.savefig('/home/fmkazemi/code/result/training_loss' + str(i) + '.png')   # save the figure to file
-            plt.xlabel('Time')
-            plt.ylabel('Accuracy on test data')
-            plt.title('Accuracy and time')
+              plt.xlabel('Time')
+              plt.ylabel('Accuracy on test data')
+              plt.title('Accuracy and time')
 #            plt.savefig('/gs/project/kek-072-aa/code/result/time_vgg16_224' + str(i) + '.png') 
-            plt.savefig('/home/fmkazemi/code/result/time_vgg19_224' + str(i) + '.png') 
-            print("Length Running time for test dataset", len(telaps))
-            print("Running time for test dataset:" + str(telaps))
-            print("Running time for each sample in test dataset:"+ str(elapsed_time/34))
+              plt.savefig('/home/fmkazemi/code/result/time_vgg19_224' + str(i) + '.png') 
+              print("Length Running time for test dataset", len(telaps))
+              print("Running time for test dataset:" + str(telaps))
+              print("Running time for each sample in test dataset:"+ str(elapsed_time/batch_size))#34))
 
-            print("Length lost",len(l))
-            print("Entropy loss:"+str(l))
+              print("Length lost",len(l))
+              print("Entropy loss:"+str(l))
 	    ###fig = plt.figure()
 	    #pdb.set_trace()
-            plt.figure(figsize=(16,8))
-            plt.plot(l) #Plot training loss
+              plt.figure(figsize=(16,8))
+              plt.plot(l) #Plot training loss
             #plt.savefig('/home/fmkazemi/code/result/training_loss' + str(i) + '.png')   # save the figure to file
-            plt.xlabel('Epoch')
-            plt.ylabel('Cross-entropy loss function')
-            plt.title('Loss function ')
+              plt.xlabel('Epoch')
+              plt.ylabel('Cross-entropy loss function')
+              plt.title('Loss function ')
 #            plt.savefig('/gs/project/kek-072-aa/code/result/entropyloss_vgg16_224' + str(i) + '.png') 
-            plt.savefig('/home/fmkazemi/code/result/entropyloss_vgg19_224' + str(i) + '.png') 
+              plt.savefig('/home/fmkazemi/code/result/entropyloss_vgg19_224' + str(i) + '.png') 
             ###############################plt.savefig('/home/farhad/Desktop/Mythesis/Backup_mycodes_Guillimin/code result/		training_loss.png')
 	    ###fig.savefig('/home/fmkazemi/code/result/training_loss.png')
 	    ##plt.close()    # close the figure
-            print("Length accuracy on train data:",len(a))
-            print("train accuracy:"+str(a))
-            plt.figure(figsize=(16,8)) 
-            l1 = plt.plot(a,'b',label= 'training accuracy') #Plot training accuracy
+              print("Length accuracy on train data:",len(a))
+              print("train accuracy:"+str(a))
+              plt.figure(figsize=(16,8)) 
+              l1 = plt.plot(a,'b',label= 'training accuracy') #Plot training accuracy
             #plt.savefig('/home/fmkazemi/code/result/training_accuracy' + str(i) + '.png')   # save the figure to file
             ##############plt.savefig('/gs/project/kek-072-aa/code/result/training_accuracy' + str(i) + '.png')
             ###############################plt.savefig('/home/farhad/Desktop/Mythesis/Backup_mycodes_Guillimin/code/result/training_accuracy.png')
 	    ##plt.close()    # close the figure
-            print("Length accuracy on test data:",len(aT))
-            print("test accuracy:"+str(aT))
+              print("Length accuracy on test data:",len(aT))
+              print("test accuracy:"+str(aT))
             #plt.figure() 
             #epoch = np.arange(0, ii*100, ii+1)#***************************************************************
-            epoch = np.linspace(0,ii*100,ii+1)
+              epoch = np.linspace(0,ii*100,ii+1)
 
             #pdb.set_trace()
-            l2 = plt.plot(epoch,aT, linewidth=4, color= 'r', marker='o', label='test accuracy') #Plot test accuracy
+              l2 = plt.plot(epoch,aT, linewidth=4, color= 'r', marker='o', label='test accuracy') #Plot test accuracy
 #            plt.savefig('/home/fmkazemi/code/result/test_accuracy' + str(i) + '.png')   # save the figure to file
 #            plt.legend((l2, l1), ('test accuracy', 'training accuracy'), loc='upper right', shadow=True)
-            plt.legend(loc='lower right', shadow=True) 
-            plt.xlabel('Epoch')
-            plt.ylabel('Accuracy')
-            plt.title('Accuracy (%) on the test data and training data')
+              plt.legend(loc='lower right', shadow=True) 
+              plt.xlabel('Epoch')
+              plt.ylabel('Accuracy')
+              plt.title('Accuracy (%) on the test data and training data')
 #            plt.savefig('/gs/project/kek-072-aa/code/result/test_train_accuracy_vgg16_224' + str(i) + '.png')
-            plt.savefig('/home/fmkazemi/code/result/test_train_accuracy_vgg19_224' + str(i) + '.png')
+              plt.savefig('/home/fmkazemi/code/result/test_train_accuracy_vgg19_224' + str(i) + '.png')
 	    ###############################plt.savefig('/home/farhad/Desktop/Mythesis/Backup_mycodes_Guillimin/code/result/test_accuracy.png')
 	    ##plt.close()    # close the figure
-            np.max(aT) #Best test accuracy
-            ii=ii+1
+              np.max(aT) #Best test accuracy
+              ii=ii+1
 	    #pdb.set_trace()
 	    #nn_confMatrix = \
 	    #    confusion_matrix(np.fromiter(chain.from_iterable(np.argmax(yP,1)),dtype=int),np.fromiter(chain.from_iterable(np.hstack	(y)),dtype=int))
 	    #nn_confMatrix = confusion_matrix(np.argmax(yP,1),np.hstack(y))
-            print("Prediction shape:")
-            print(yP.shape)
-            print("Predictions:")
-            print(str(np.argmax(yP,1))) 
-            print("True Label shape:",yT.shape)
-            print("True Labels:")
-            print(str(yT))
-            del nn_confMatrix
-            del nn_acc
+              print("Prediction shape:")
+              print(yP.shape)
+              print("Predictions:")
+              print(str(np.argmax(yP,1))) 
+              print("True Label shape:",yT.shape)
+              print("True Labels:")
+              print(str(yT))
+              del nn_confMatrix
+              del nn_acc
             #print(np.argmax(yP,1))
-            nn_confMatrix = confusion_matrix(np.argmax(yP,1),yT)
-            print("Confusion Matrix in step " + str(i))
-            print(nn_confMatrix)
-            nn_acc = np.sum(nn_confMatrix.diagonal()) / np.sum(nn_confMatrix,dtype=np.float)
-            print("Accuracy based on Confusion Matrix: ",nn_acc)
-        i+= 1	
+              nn_confMatrix = confusion_matrix(np.argmax(yP,1),yT)
+              print("Confusion Matrix in step " + str(i))
+              print(nn_confMatrix)
+              nn_acc = np.sum(nn_confMatrix.diagonal()) / np.sum(nn_confMatrix,dtype=np.float)
+              print("Accuracy based on Confusion Matrix: ",nn_acc)
+         i+= 1	
 	    	
 #------------------plot  Results
 #import matplotlib

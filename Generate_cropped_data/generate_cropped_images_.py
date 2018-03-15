@@ -4,14 +4,14 @@ import os
 import pandas as pd
 from tqdm import tqdm
 import argparse
-
+import pdb
 parser = argparse.ArgumentParser()
 #@parser.add_argument("-i", "--illum", help="turn on illum correction",
 #@                    action="store_true")
 #@parser.add_argument("-e", "--excludecontrol", help="exclude control",
 #@                    action="store_true")
 parser.add_argument("-n", "--num", help="num samples", type=int,
-                    default=25)
+                    default=35)
 parser.add_argument("-s", "--seed", help="seed", type=int,
                     default=42)
 parser.add_argument("-w", "--size", help="sample size", type=int,
@@ -45,7 +45,8 @@ print("generating samples with size %d num %d seed %d" % (sample_size, num_sampl
 
 rng = np.random.RandomState(seed)
 images = h5py.File(os.path.join(processed_path,"full_images.hdf5" ),"r")['images']
-
+#print("images shape:",images.shape,"images:",images[1,:,:,1])
+#pdb.set_trace()
 filename = ('rand_sampled_size%d_num%d' % (sample_size, num_samples))
 
 f = h5py.File(os.path.join(processed_path, "%s.hdf5" % filename), "w")
@@ -62,6 +63,8 @@ for i in range(images.shape[0]):
                                                      r_x:r_x+sample_size,
                                                      r_y:r_y+sample_size,
                                                      :]
+        print("sampled_images shape:",sampled_images.shape,"sampled_images:",sampled_images)
+ #       pdb.set_trace()
     pbar.update(1)
 
 outCSV.reset_index(drop=True, inplace=True)
