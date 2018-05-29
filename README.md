@@ -12,7 +12,7 @@ The final version of the code will be released after publishing papers.
 
 2- "Impact of Optimization Methods in Performance of Deep Learning" Has not submitted Journal, 2018.
 
-3- "Importance of Data in Performance of Deep learning" Has not submitted Journal, 2018. 
+3- "Imbalanced Data and Deep learning" Has not submitted Journal, 2018. 
 
 4- "Deep Learning for Automating High Content Screening Systems on Big data" Has not submitted Journal, 2018. 
 
