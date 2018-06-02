@@ -17,13 +17,12 @@ The final version of the code will be released after publishing papers.
 4- "Deep Learning for Automating High Content Screening Systems on Big data" Has not submitted Journal, 2018. 
 
 5- "Deep learning algorithms that learn with less data" Has not submitted Journal, 2018.  
+
 ![alt text](https://github.com/fmkazemi/Deep-Learning-on-HCS-Bigdata/blob/master/G06_s2_w1C803D6CD-58CD-4BB5-A8F3-8441A703CDE4.png)
                                      DNA channel for DNA damage MOA
 
-
 ![alt text](https://github.com/fmkazemi/Deep-Learning-on-HCS-Bigdata/blob/master/G06_s2_w2D686291A-62EE-42E1-8467-96BD2FA594CE.png)
                                      Tubulin channel for DNA damage MOA
-
 
 ![alt text](https://github.com/fmkazemi/Deep-Learning-on-HCS-Bigdata/blob/master/G06_s2_w455932840-A7C3-4F1F-A632-ABB0199E872C.png)
                                      Actin channel for DNA damage MOA
