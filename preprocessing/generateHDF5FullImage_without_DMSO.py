@@ -91,14 +91,6 @@ for row in zip(combined['Image_FileName_DAPI'],
 #*    pdb.set_trace()
 #*    misc.imshow(c22)
 
-#    c3=Image.open(os.path.join(image_directory, actin_file))
-    c3 = misc.imread(os.path.join(image_directory, actin_file))
-#    c33=resizeimage.resize_contain(c3, [256, 320])
-#    c33=c3.resize((224,224))    
-    c33=misc.imresize(c3,(224,224))
-#*    pdb.set_trace()
-#*    misc.imshow(c3)
-
 
     img = np.zeros(c11.shape + (3,))
     img[:, :, 0] = c11
