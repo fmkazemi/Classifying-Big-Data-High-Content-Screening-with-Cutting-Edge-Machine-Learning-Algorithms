@@ -1,7 +1,7 @@
 # Deep-Learning-on-HC-Bigdata
 HCS technologies have become powerful systems for studying biology. 
 
-In this work, we are interested in the application and provision of cutting-edge machine learning algorithms for HCS data analysis, which are tailored to suit its specific conditions and challenges. This work focuses on the challenge of using information content that is as high as possible, by considering all the available features, to build a system for HC analysis. 
+In this work, we are interested in the application and provision of cutting-edge machine learning algorithms for HC data analysis, which are tailored to suit its specific conditions and challenges. This work focuses on the challenge of using information content that is as high as possible, by considering all the available features, to build a system for HC analysis. 
 
 The final version of the code will be released after publishing papers.
 
