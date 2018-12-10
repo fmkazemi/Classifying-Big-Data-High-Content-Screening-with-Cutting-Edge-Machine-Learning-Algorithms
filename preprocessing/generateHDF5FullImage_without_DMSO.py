@@ -19,8 +19,8 @@ script_dir = os.path.dirname(script_path)
 proj_root = os.path.join(script_dir)
 
 image_csv = pd.read_csv(os.path.join(proj_root,
-                                     'input/raw/BBBC021_v1_image.csv'))
-moa_csv = pd.read_csv(os.path.join(proj_root, 'input/raw/BBBC021_v1_moa.csv'))
+                                     'input/raw/e.csv'))
+moa_csv = pd.read_csv(os.path.join(proj_root, 'input/raw/a.csv'))
 
 combined = pd.merge(image_csv, moa_csv,
                     how='inner',
@@ -46,9 +46,6 @@ curFile = 0
 
 for row in zip(combined['Image_FileName_DAPI'],
                combined['Image_FileName_Tubulin'],
-               combined['Image_FileName_Actin'],
-               combined['Image_PathName_DAPI'],
-               combined['compound'], combined['concentration'],
                combined['moa'], combined['Image_Metadata_Plate_DAPI'],
                combined['Image_Metadata_Well_DAPI'], combined['Replicate']):
 
