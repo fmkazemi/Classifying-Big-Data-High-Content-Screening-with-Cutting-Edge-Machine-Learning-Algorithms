@@ -9,8 +9,6 @@ In this work, we are interested in the application and provision of cutting-edge
 
 -	Worked on Compute Canada GPU and HPC clusters. Supported by ACENET, Calcul Québec, WestGrid and Compute Canada.
 
--	Collaborated with advisors at the Computational Chemical Biology group, School of Pharmacy at Memorial University.
-
 -	Investigated how to work appropriately with Deep Learning algorithms such as AlexNet, VGG, GoogleNet, Inception, Deep Residual Networks, DenseNet in confronting with imbalanced datasets such as fraud detection, factory products, and HCS datasets.
 
 
